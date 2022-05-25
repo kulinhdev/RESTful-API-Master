@@ -45,7 +45,7 @@ class SellerProductController extends ApiController
         $data = $request->all();
 
         $data['status'] = Product::UNAVAILABLE_PRODUCT;
-        $data['image'] = '1.jpg';
+        $data['image'] = $request->image->store('');
         $data['seller_id'] = $seller->id;
 
         $product = Product::create($data);
@@ -87,21 +87,17 @@ class SellerProductController extends ApiController
             }
         }
 
-        // if ($request->hasFile('image')) {
-        //     Storage::delete($product->image);
+        // Change image file upload
+        if ($request->hasFile('image')) {
+            Storage::delete($product->image);
 
-        //     $product->image = $request->image->store('');
-        // }
+            $product->image = $request->image->store('');
+        }
 
         // Check input value same with value in the database
         if ($product->isClean()) {
             return $this->errorResponse('You need to specify a different value to update', 422);
         }
-
-        if ($product->isDirty()) {
-            dd($product);
-        }
-
 
         $product->save();
 
@@ -119,6 +115,7 @@ class SellerProductController extends ApiController
         $this->checkSeller($seller, $product);
 
         $product->delete();
+        Storage::delete($product->image);
 
         return $this->showOne($product);
     }
